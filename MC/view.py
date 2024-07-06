@@ -8,7 +8,7 @@ ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark
 
 
 #TODO
-
+# Check llm_sorting_file function and if it could break
 # Add folders that user wants to store courses in + description
 class App(ctk.CTk):
     def __init__(self, current_directory):
@@ -20,6 +20,7 @@ class App(ctk.CTk):
         self.directories = []
         self.files = []
         self.settings = {}
+        self.llm_folder = {}
 
         
         # Button to clear the root window
@@ -136,10 +137,10 @@ class App(ctk.CTk):
         """
         
         # Updating the settings dictionary
-        self.settings["Duplicates"] = self.delete_duplicate.get()
-        self.settings["Organize files"] = self.organize_files.get()
-        self.settings["Organize LLM"] = self.organize_files_llm.get()
-        self.settings["Sort files"] = self.sort_files.get()
+        self.settings["Duplicates"] = True if self.delete_duplicate.get() == "on" else False
+        self.settings["Organize files"] = True if self.organize_files.get() == "on" else False
+        self.settings["Organize LLM"] = True if self.organize_files_llm.get() == "on" else False
+        self.settings["Sort files"] = True if self.sort_files.get() == "on" else False
         
         print(self.settings)
         self.clear_root()
@@ -200,33 +201,127 @@ class App(ctk.CTk):
         self.button = ctk.CTkButton(self, text="Go back", command=self.start_app)
         self.button.pack(pady=10)
         
+    def __llm_sorting_files(self): # Peut causer des problemes
+        folder, description = self.entry1.get().split("/")
+        self.llm_folder[folder] = description
+        print(self.llm_folder)  
+        
     def sorting_options(self):
         """
-        Allows the user to select the sorting options
+        Where we're going to let the user choose the settings of all the actions they want.
         """
-        self.main_frame = ctk.CTkFrame(self)
-        self.main_frame.pack(expand=True)  # Use pack instead of grid
+        
+        if self.settings["Sort files"]:
+            text = "Sort files by:"
+            options = ["By Name", "By Date", "By Size"]
+            
+            self.main_frame = ctk.CTkFrame(self)
+            self.main_frame.pack()
 
-        # Add a label for the app page with more padding and a larger font size for prominence
-        self.label = ctk.CTkLabel(self.main_frame, text="This is the app page!", font=("Arial", 16))
-        self.label.pack(pady=(20, 10))
+            self.label = ctk.CTkLabel(self.main_frame, text=text, font=("Arial", 16))
+            self.label.pack(pady=(20, 10))
 
-        # Create a sub-frame to hold the radio buttons, centering them within the main frame
-        self.radio_frame = ctk.CTkFrame(self.main_frame)
-        self.radio_frame.pack()
-        # Define options for the radio buttons
-        options = ["Delete duplicates", "Organize files", "Use LLM to organize files", "Sort files"]
+            # Create a sub-frame to hold the radio buttons, centering them within the main frame
+            self.radio_frame = ctk.CTkFrame(self.main_frame)
+            self.radio_frame.pack()
+            # Define options for the radio buttons
 
-        # Define a StringVar to hold the selected option
-        self.selected_option = ctk.StringVar(value=options[0])
+            # Define a StringVar to hold the selected option
+            self.selected_option = ctk.StringVar(value=options[0])
 
-        # Create and place radio buttons into the frame horizontally using pack
-        for idx, option in enumerate(options):
-            radio_button = ctk.CTkRadioButton(
-                self.radio_frame, text=option, variable=self.selected_option, value=option
-            )
-            radio_button.pack(side="left", padx=10, pady=5)  # Align horizontally
+            # Create and place radio buttons into the frame horizontally using pack
+            for idx, option in enumerate(options):
+                radio_button = ctk.CTkRadioButton(
+                    self.radio_frame, text=option, variable=self.selected_option, value=option
+                )
+                radio_button.pack(side="left", padx=10, pady=5)  # Align horizontally
+            separator = ctk.CTkFrame(self, height=2, fg_color="gray")
+            separator.pack(fill="x", pady=10)
+
+
+        
+        
+        if self.settings["Organize files"]:
+            
+            # Put the file in the folder x if if title or content contains regex y
+            text = "Organize by:"
+            options = ["By Name", "By Date", "By Size"]
+            
+            self.main_frame = ctk.CTkFrame(self)
+            self.main_frame.pack()
+
+            self.label = ctk.CTkLabel(self.main_frame, text=text, font=("Arial", 16))
+            self.label.pack(pady=(20, 10))
+
+            # Create a sub-frame to hold the radio buttons, centering them within the main frame
+            self.radio_frame = ctk.CTkFrame(self.main_frame)
+            self.radio_frame.pack()
+            # Define options for the radio buttons
+
+            # Define a StringVar to hold the selected option
+            self.selected_option = ctk.StringVar(value=options[0])
+
+            # Create and place radio buttons into the frame horizontally using pack
+            for idx, option in enumerate(options):
+                radio_button = ctk.CTkRadioButton(
+                    self.radio_frame, text=option, variable=self.selected_option, value=option
+                )
+                radio_button.pack(side="left", padx=10, pady=5)  # Align horizontally
+            separator = ctk.CTkFrame(self, height=2, fg_color="gray")
+            separator.pack(fill="x", pady=10)
+        
+        
+        if self.settings["Organize LLM"]:
+            # Ask for file + description 
+            text = """What are the the names of the folders you want to store 
+            the files in? \n\n 
+            ** Write the name of the folder and a description of the folder 
+            seperated by a '/' ** \n\n As such: \n\n Calculus/This folder
+            contains all the calculus courses"""
+            
+            self.main_frame = ctk.CTkFrame(self)
+            self.main_frame.pack()
+
+            self.label = ctk.CTkLabel(self.main_frame, text=text, font=("Arial", 16))
+            self.label.pack(pady=(20, 10))
+
+            # Create a sub-frame to hold the radio buttons, centering them within the main frame
+            self.radio_frame = ctk.CTkFrame(self.main_frame)
+            self.radio_frame.pack()
+            # Define options for the radio buttons
+            # Create a label
+            label = ctk.CTkLabel(self.radio_frame, text="Enter your text here:")
+            label.pack(pady=10)
+
+            # Create a text input field (CTkEntry)
+            self.entry1 = ctk.CTkEntry(self.radio_frame, width=200)
+            self.entry1.pack(pady=10)
+                
+
+            
+            self.button = ctk.CTkButton(self.radio_frame, text="+", command=self.__llm_sorting_files) # Peut causer des problemes à fix
+            self.button.pack(pady=10)
+            
+            options = ["GPT 3.5", "llama2", "gemma"]
+
+            
+
+            # Define a StringVar to hold the selected option
+            self.selected_option = ctk.StringVar(value=options[0])
+
+            # Create and place radio buttons into the frame horizontally using pack
+            for idx, option in enumerate(options):
+                radio_button = ctk.CTkRadioButton(
+                    self.radio_frame, text=option, variable=self.selected_option, value=option
+                )
+                radio_button.pack(side="left", padx=10, pady=5)  # Align horizontally   
+                
+                   
+        
+
 
         # Add a submit button with more padding and centered alignment
-        self.submit_button = ctk.CTkButton(self.main_frame, text="Submit", font=("Arial", 14))
+        self.submit_button = ctk.CTkButton(self, text="Submit", font=("Arial", 14))
         self.submit_button.pack(pady=20)
+        
+        
