@@ -22,6 +22,7 @@ class App(ctk.CTk):
         self.settings = {}
         self.folders_regex = {}
         self.llm_folder = {}
+        self.llm_model = None
 
         
         # Button to clear the root window
@@ -190,12 +191,11 @@ class App(ctk.CTk):
         self.label = ctk.CTkLabel(self, text="Options")
         self.label.pack(pady=10)
         
-        if self.sort_files.get() == "on":
+        if self.sort_files.get() == "on" or self.organize_files.get() == "on" or self.organize_files_llm.get() == "on":
             self.sorting_options()
-        if self.delete_duplicate.get() == "on":
-            self.delete_duplicates()
-        if self.organize_files.get() == "on":
-            self.organize_files()
+        elif self.delete_duplicate.get() == "on":
+            self.running()
+
         
         
         
@@ -234,16 +234,32 @@ class App(ctk.CTk):
                 self.button.pack(pady=10)
             
             if options:
+                if is_llm:
+                
 
-                # Define a StringVar to hold the selected option
-                self.selected_option = ctk.StringVar(value=options[0])
+                    # Define a StringVar to hold the selected option
+                    self.selected_option = ctk.StringVar(value=options[0])
 
-                # Create and place radio buttons into the frame horizontally using pack
-                for idx, option in enumerate(options):
-                    radio_button = ctk.CTkRadioButton(
-                        self.radio_frame, text=option, variable=self.selected_option, value=option
-                    )
-                    radio_button.pack(side="left", padx=10, pady=5)  # Align horizontally   
+                    # Create and place radio buttons into the frame horizontally using pack
+                    for idx, option in enumerate(options):
+                        radio_button = ctk.CTkRadioButton(
+                            self.radio_frame, text=option, variable=self.selected_option, value=option
+                        )
+                        radio_button.pack(side="left", padx=10, pady=5)  # Align horizontally   
+                    print(self.selected_option)
+                else:
+                    
+                    # Define a StringVar to hold the selected option
+                    self.selected_option1 = ctk.StringVar(value=options[0])
+
+                    # Create and place radio buttons into the frame horizontally using pack
+                    for idx, option in enumerate(options):
+                        radio_button1 = ctk.CTkRadioButton(
+                            self.radio_frame, text=option, variable=self.selected_option1, value=option
+                        )
+                        radio_button1.pack(side="left", padx=10, pady=5)  # Align horizontally   
+                    print(self.selected_option1)
+
 
     def __llm_sorting_files(self): # Peut causer des problemes
         folder, description = self.entry1.get().split("/")
@@ -301,12 +317,38 @@ class App(ctk.CTk):
             
             self.label = ctk.CTkLabel(self, text="Folders with their description: " + str(self.llm_folder))       
             self.label.pack(pady=10)
+            
 
 
 
         # Add a submit button with more padding and centered alignment
 
-        self.submit_button = ctk.CTkButton(self, text="Submit", font=("Arial", 14))
+        self.submit_button = ctk.CTkButton(self, text="Submit", font=("Arial", 14), command=self.running)
         self.submit_button.pack(pady=20)
         
+    def running(self):
+        print(self.selected_option1.get())
+        print(self.selected_option.get())   
         
+        if self.settings["Sort files"]:
+            self.settings["Sort files"] = self.selected_option1.get()
+        if self.settings["Organize files"]:
+            self.settings["Organize files"] = self.folders_regex
+        if self.settings["Organize LLM"]:
+            self.settings["Organize LLM"] = [self.llm_folder, self.selected_option.get()]
+            
+        print(self.settings)
+        
+        
+        self.clear_root()
+        self.geometry("400x400")
+        model = Model(settings=self.settings, files=self.files, directory=self.directories)
+        self.label = ctk.CTkLabel(self, text="Running the program!")
+        self.label.pack(pady=10)
+        model.run()
+        self.label = ctk.CTkLabel(self, text="Program finished running!")
+        
+        
+
+                
+    
